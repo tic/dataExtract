@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 """
+
+#####
+##### This script is slightly modified. The original header provided by
+##### the authors is just below this text blob, and you can see exactly
+##### what my edits were by visiting https://github.com/tic/dataExtract
+#####
+
 A simple Python wrapper for the stanford NER binary that makes it easier to use it
 on UNIX/Windows systems.
 Note: The script does some minimal sanity checking of the input, but don't
@@ -50,6 +57,12 @@ def arg_parse():
     arg_p.add_argument('-v', '--verbose', action='store_true')
     return arg_p
 
+#######################
+def custom_arg_parse():
+    ap = ArgumentParser('Stanford NER Python Wrapper with updates for quality of life')
+    ap.add_argument('-s', '--string', action='append', required=True)
+    return ap
+#######################
 
 def debug_print(log, verbose):
     if verbose:
@@ -110,18 +123,19 @@ def stanford_ner(filename, verbose=True, absolute_path=None):
 
 
 def main(args):
-    arg_p = arg_parse().parse_args(args[1:])
-    filename = arg_p.filename
-    verbose = arg_p.verbose
-    debug_print(arg_p, verbose)
-    if filename is None:
-        print('please provide a text file containing your input. Program will exit.')
-        exit(1)
-    if verbose:
-        debug_print('filename = {}'.format(filename), verbose)
-    entities = stanford_ner(filename, verbose)
-    print('\n'.join([entity[0].ljust(20) + '\t' + entity[1] for entity in entities]))
+    ap = custom_arg_parse().parse_args(args[1:])
+    verbose = False
+    queries = ap.string
+    from os import remove
 
+    for (index, query) in enumerate(queries):
+        filename = f'query_{index}.txt'
+        with open(filename, 'w') as f:
+            f.write(query)
+        entities = stanford_ner(filename, verbose)
+        print(entities)
+        remove(filename)
+        if verbose: remove('out.pkl')
 
 if __name__ == '__main__':
     exit(main(argv))
